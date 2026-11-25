@@ -60,3 +60,15 @@ def test_single_shared_kmer_does_not_link_short_sequences():
     b = "WWPQHKTVRQFFYYCCDDEEGGNNRRSSTT"      # shares only the 5-mer KTVRQ with a
     labels = cluster_by_shared_kmers([a, b], k=5, min_frac=0.02)
     assert labels[0] != labels[1]
+
+def test_trim_ends_keeps_both_ends():
+    from src.esm_embed import trim_ends
+    s = trim_ends("A" * 600 + "Y" * 600, max_len=1000)
+    assert len(s) == 1000 and s[0] == "A" and s[-1] == "Y"
+    assert trim_ends("ACD", max_len=1000) == "ACD"
+
+
+def test_embedding_classifier_output_shape():
+    from src.models import EmbeddingClassifier
+    model = EmbeddingClassifier(in_dim=480, n_classes=10)
+    assert model(torch.randn(5, 480)).shape == (5, 10)

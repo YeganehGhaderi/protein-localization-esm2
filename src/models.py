@@ -27,3 +27,19 @@ class ProteinCNN(nn.Module):
             pooled.append(c.max(dim=2).values)         # (batch, n_filters)
         z = self.dropout(torch.cat(pooled, dim=1))
         return self.classifier(z)                      # (batch, n_classes) logits
+
+class EmbeddingClassifier(nn.Module):
+    """Small MLP head trained on fixed (frozen) protein embeddings."""
+
+    def __init__(self, in_dim, n_classes, hidden=256, dropout=0.3):
+        super().__init__()
+        self.net = nn.Sequential(
+            nn.LayerNorm(in_dim),
+            nn.Linear(in_dim, hidden),
+            nn.ReLU(),
+            nn.Dropout(dropout),
+            nn.Linear(hidden, n_classes),
+        )
+
+    def forward(self, x):
+        return self.net(x)

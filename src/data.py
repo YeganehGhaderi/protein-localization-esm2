@@ -109,3 +109,15 @@ def split_train_val_by_cluster(df, groups, seed=0, n_splits=5):
     sgkf = StratifiedGroupKFold(n_splits=n_splits, shuffle=True, random_state=seed)
     train_idx, val_idx = next(sgkf.split(df, df.location, groups))
     return df.iloc[train_idx], df.iloc[val_idx]
+
+def make_splits(fasta_path, min_shared=10, min_frac=0.05, seed=0):
+    """Return (train, val, test) DataFrames with the project's split."""
+    df = load_deeploc(fasta_path)
+    df = df[df.location != "Cytoplasm-Nucleus"]
+    test = df[df.part == "test"].reset_index(drop=True)
+    trainval = df[df.part.isna()].reset_index(drop=True)
+
+    shared, n_kmers = shared_kmer_matrix(trainval.seq.tolist())
+    groups = cluster_from_shared(shared, n_kmers, min_frac, min_shared)
+    train, val = split_train_val_by_cluster(trainval, groups, seed=seed)
+    return train.reset_index(drop=True), val.reset_index(drop=True), test
