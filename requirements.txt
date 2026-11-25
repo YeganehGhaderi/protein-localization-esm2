@@ -1,0 +1,9 @@
+torch
+transformers
+peft
+pandas
+scikit-learn
+scipy
+xgboost
+matplotlib
+pytest
