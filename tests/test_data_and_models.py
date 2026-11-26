@@ -72,3 +72,18 @@ def test_embedding_classifier_output_shape():
     from src.models import EmbeddingClassifier
     model = EmbeddingClassifier(in_dim=480, n_classes=10)
     assert model(torch.randn(5, 480)).shape == (5, 10)
+
+
+def test_trainable_state_roundtrip():
+    import torch.nn as nn
+    from src.lora import count_trainable, load_trainable_state, trainable_state
+
+    m = nn.Linear(4, 2)
+    m.bias.requires_grad = False                    # only the weight is trainable
+    state = trainable_state(m)
+    assert set(state) == {"weight"} and count_trainable(m) == 8
+
+    with torch.no_grad():
+        m.weight.zero_()
+    load_trainable_state(m, state)
+    assert not torch.all(m.weight == 0)             # saved weights were restored
